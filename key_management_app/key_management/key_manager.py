@@ -15,12 +15,17 @@ class KeyManager:
     IV = b'\x91e\xc6\x11v\x04\x9bK\xa8\x85\x86\xa5Y\xe3*\xa4'
 
     def __init__(self, dir_path: str = None, pin_code: str = None):
+        """generates a keypair while initiating the object"""
         self.dir_path: str = dir_path
         self.pin_code: str = pin_code
-        (self.private_key, self.public_key) = self.generate_rsa_keypair()
+        (self.private_key, self.public_key) = self._generate_rsa_keypair()
         self.private_key_enc = None
 
-    def generate_rsa_keypair(self) -> tuple[bytes, bytes]:
+    def encrypt_and_save_keys(self) -> None:
+        self._encrypt_private_key()
+        self._save_rsa_keypair()
+
+    def _generate_rsa_keypair(self) -> tuple[bytes, bytes]:
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=self.KEY_SIZE,
@@ -43,7 +48,7 @@ class KeyManager:
         print("Generated a pair of keys.")
         return pem_private_key, pem_public_key
 
-    def encrypt_private_key(self) -> None:
+    def _encrypt_private_key(self) -> None:
         if self.pin_code is None:
             print("No pin code provided. Encryption unsuccessful.")
             return None
@@ -63,7 +68,7 @@ class KeyManager:
         # decrypted_data_padded = cipher.decrypt(encrypted_data) # encrypted data = encrypted key
         # decrypted_data = decrypted_data_padded.rstrip(b'\0').decode("UTF-8")
 
-    def save_rsa_keypair(self) -> None:
+    def _save_rsa_keypair(self) -> None:
         try:
             private_key_file = os.path.join(self.dir_path, self.PRIVATE_KEY_FILE_NAME)
             public_key_file = os.path.join(self.dir_path, self.PUBLIC_KEY_FILE_NAME)
