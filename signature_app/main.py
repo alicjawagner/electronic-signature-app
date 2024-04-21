@@ -4,7 +4,7 @@ signer = Signer()
 signer.pin_code = "542383"
 signer.private_key_file_path = "C:\\Users\\alicj\\OneDrive\\Pulpit\\myrepo\\private_key.pem.enc"
 signer.doc_file_path = "C:\\Users\\alicj\\OneDrive\\Pulpit\\studia\\semestr_6\\bsk\\projekt\\electronic-signature-app\\tests\\file1.cpp"
-signer.create_xades_signature()
+signer.obtain_private_key()
 
 """
 import xades
@@ -38,7 +38,7 @@ class SignatureProcessor:
         document_hash = hashlib.sha256(document.encode()).hexdigest()
 
         # Decrypt private key using AES algorithm and PIN number
-        decrypted_private_key = decrypt_private_key(private_key, pin_number)
+        decrypted_private_key = obtain_private_key(private_key, pin_number)
 
         # Sign the document hash using the decrypted private key
         signature = sign_document_hash(document_hash, decrypted_private_key)
@@ -48,7 +48,7 @@ class SignatureProcessor:
 
         return xml_signature
 
-    def decrypt_private_key(self, private_key, pin_number):
+    def obtain_private_key(self, private_key, pin_number):
         # Implement decryption logic using AES algorithm and PIN number
         # Example: decrypted_private_key = aes_decrypt(private_key, pin_number)
         decrypted_private_key = private_key  # Placeholder, replace with actual decryption logic

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sys
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -16,6 +17,7 @@ class KeyManager:
 
     def __init__(self, dir_path: str = None, pin_code: str = None):
         """generates a keypair while initiating the object"""
+
         self.dir_path: str = dir_path
         self.pin_code: str = pin_code
         (self.private_key, self.public_key) = self._generate_rsa_keypair()
@@ -50,8 +52,8 @@ class KeyManager:
 
     def _encrypt_private_key(self) -> None:
         if self.pin_code is None:
-            print("No pin code provided. Encryption unsuccessful.")
-            return None
+            print("No pin code provided. Encryption unsuccessful.", file=sys.stderr)
+            return
 
         key = hashlib.sha256(self.pin_code.encode('utf-8')).digest()
         data = self.private_key
@@ -82,8 +84,8 @@ class KeyManager:
                 print("Public key saved successfully.")
 
         except TypeError as err:
-            print("Incorrect path:", err)
+            print("Incorrect path:", err, file=sys.stderr)
         except FileNotFoundError:
-            print("No such file or directory")
+            print("No such file or directory", file=sys.stderr)
         except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}")
+            print(f"Unexpected {err=}, {type(err)=}", file=sys.stderr)
