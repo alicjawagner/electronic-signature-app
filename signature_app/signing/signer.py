@@ -1,7 +1,10 @@
 import base64
 import hashlib
+import os
 import sys
-
+import time
+import lxml.etree as ET
+from datetime import datetime
 from Crypto.Cipher import AES
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -46,7 +49,6 @@ class Signer(SignatureProcessor):
         doc = self._read_doc()
         doc_hash = hashlib.sha256(doc.encode('utf-8')).digest()
         signature = self._sign_document(doc_hash, self.private_key)
-        # xml_signature = create_xml_signature(document, signature, user_info)
         self._create_and_write_xades(signature)
 
     def _read_key_from_file(self) -> bytes:
@@ -109,6 +111,38 @@ class Signer(SignatureProcessor):
         return signature
 
     def _create_and_write_xades(self, signature: bytes) -> None:
-        # TODO
-        print(base64.b64encode(signature))
-        pass
+        root = ET.Element('XAdES')
+
+        signature_info = ET.SubElement(root, 'SignatureInfo')
+
+        signer_info = ET.SubElement(signature_info, 'SignerInfo')
+        signer_info.text = 'User A'
+
+        doc_info = ET.SubElement(signature_info, 'DocumentInfo')
+
+        doc_size = ET.SubElement(doc_info, 'DocumentSize')
+        doc_size.text = str(os.path.getsize(self.doc_file_path))
+
+        doc_extension = ET.SubElement(doc_info, 'DocumentExtension')
+        _, file_extension = os.path.splitext(self.doc_file_path)
+        doc_extension.text = file_extension
+
+        doc_modification = ET.SubElement(doc_info, 'DocumentModificationDate')
+        doc_modification.text = time.ctime(os.path.getmtime(self.doc_file_path))
+
+        doc_hash = ET.SubElement(doc_info, 'DocumentHash')
+        doc_hash.text = base64.b64encode(signature)
+
+        timestamp = ET.SubElement(signature_info, 'Timestamp')
+        timestamp.text = datetime.now().isoformat()
+
+        tree = ET.ElementTree(root)
+        self._write_xml(tree)
+
+    def _write_xml(self, xml_tree):
+        dir_path, file_name = os.path.split(self.doc_file_path)
+        file_name = os.path.splitext(file_name)[0]
+        file_name = file_name + "_signature.xml"
+        xml_path = os.path.join(dir_path, file_name)
+        xml_tree.write(xml_path)
+        print("Xml saved successfully.")
