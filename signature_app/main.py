@@ -1,4 +1,4 @@
-from signature_app.encryption.encryptor import Encryptor
+from signature_app.encryption import Encryptor
 from signature_app.signing import Signer
 
 signer = Signer()

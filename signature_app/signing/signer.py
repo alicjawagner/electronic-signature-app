@@ -10,12 +10,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from signature_app.signing import SignatureProcessor
+from signature_app.utils import IV, read_key_from_file, read_doc
 
 
-class Signer(SignatureProcessor):
+class Signer:
     def __init__(self, private_key_path: str = None, pin_code: str = None, doc_path: str = None):
-        super().__init__()
         self.private_key_file_path: str = private_key_path
         self.pin_code: str = pin_code
         self.doc_file_path: str = doc_path
@@ -29,7 +28,7 @@ class Signer(SignatureProcessor):
         if self.private_key_file_path is None:
             raise Exception("No private key provided.")
 
-        private_key_enc = self._read_key_from_file()
+        private_key_enc = read_key_from_file(self.private_key_file_path)
         self._decrypt_private_key(private_key_enc)
         correct = self._check_private_key()
         if not correct:
@@ -41,26 +40,14 @@ class Signer(SignatureProcessor):
         if self.doc_file_path is None:
             raise Exception("No document provided.")
 
-        doc = self._read_doc()
+        doc = read_doc(self.doc_file_path)
         doc_hash = hashlib.sha256(doc).digest()
         signature = self._sign_document(doc_hash, self.private_key)
         self._create_and_write_xades(signature)
 
-    def _read_key_from_file(self) -> bytes:
-        try:
-            with open(self.private_key_file_path, "rb") as f:
-                private_key_enc = f.read()
-                print("Private key read successfully.")
-                return private_key_enc
-
-        except FileNotFoundError:
-            raise Exception("No such file or directory")
-        except Exception as err:
-            raise Exception(f"Unexpected {err=}, {type(err)=}")
-
     def _decrypt_private_key(self, private_key_enc) -> None:
         key = hashlib.sha256(self.pin_code.encode('utf-8')).digest()
-        cipher = AES.new(key, AES.MODE_CBC, self.IV)
+        cipher = AES.new(key, AES.MODE_CBC, IV)
         decrypted_data_padded = cipher.decrypt(private_key_enc)
         # decrypted_data = decrypted_data_padded.rstrip(b'\0').decode("UTF-8")
         decrypted_data = decrypted_data_padded.rstrip(b'\0')
@@ -74,17 +61,6 @@ class Signer(SignatureProcessor):
                 return False
         except (Exception,):
             return False
-
-    def _read_doc(self) -> bytes:
-        try:
-            with open(self.doc_file_path, "rb") as f:
-                content = f.read()
-                print("Document read successfully.")
-                return content
-        except FileNotFoundError:
-            raise Exception("No such file or directory")
-        except Exception as err:
-            raise Exception(f"Unexpected {err=}, {type(err)=}")
 
     @staticmethod
     def _sign_document(document: bytes, private_key: bytes) -> bytes:

@@ -3,6 +3,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
+from signature_app.utils import read_key_from_file, read_doc
+
 
 class Encryptor:
     def __init__(self, public_key_path: str = None, doc_path: str = None):
@@ -16,7 +18,7 @@ class Encryptor:
         if self.public_key_file_path is None:
             raise Exception("No public key provided.")
 
-        public_key = self._read_key_from_file()
+        public_key = read_key_from_file(self.public_key_file_path)
         self.public_key = public_key
 
     def encrypt_and_save_file(self) -> None:
@@ -27,32 +29,9 @@ class Encryptor:
         if self.public_key is None:
             raise Exception("No public key provided.")
 
-        doc = self._read_doc()
+        doc = read_doc(self.doc_file_path)
         encrypted_file = self._encrypt_document(doc)
         self._write_encrypted_file(encrypted_file)
-
-    def _read_key_from_file(self) -> bytes:
-        try:
-            with open(self.public_key_file_path, "rb") as f:
-                public_key = f.read()
-                print("Public key read successfully.")
-                return public_key
-
-        except FileNotFoundError:
-            raise Exception("No such file or directory")
-        except Exception as err:
-            raise Exception(f"Unexpected {err=}, {type(err)=}")
-
-    def _read_doc(self) -> bytes:
-        try:
-            with open(self.doc_file_path, "rb") as f:
-                content = f.read()
-                print("Document read successfully.")
-                return content
-        except FileNotFoundError:
-            raise Exception("No such file or directory")
-        except Exception as err:
-            raise Exception(f"Unexpected {err=}, {type(err)=}")
 
     def _encrypt_document(self, document: bytes) -> bytes:
         public_key = serialization.load_pem_public_key(
