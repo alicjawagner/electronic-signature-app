@@ -1,2 +1,1 @@
-from signature_app.signing.signature_processor import SignatureProcessor
-from signature_app.signing.signer import Signer
+from .signer import Signer
