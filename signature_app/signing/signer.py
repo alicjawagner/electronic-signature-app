@@ -1,7 +1,6 @@
 import base64
 import hashlib
 import os
-import sys
 import time
 import lxml.etree as ET
 from datetime import datetime
@@ -26,28 +25,24 @@ class Signer(SignatureProcessor):
         """reads the key from file, decrypts it and checks if it has been successfully decrypted"""
 
         if self.pin_code is None:
-            print("No pin code provided. Provide a pin to complete the procedure.", file=sys.stderr)
-            return
+            raise Exception("No pin code provided.")
         if self.private_key_file_path is None:
-            print("""No private key provided. Provide the path to the file
-                     with your private key to complete the procedure.""", file=sys.stderr)
-            return
+            raise Exception("No private key provided.")
 
         private_key_enc = self._read_key_from_file()
         self._decrypt_private_key(private_key_enc)
         correct = self._check_private_key()
-        # TODO co jak jest niepoprawny
+        if not correct:
+            raise Exception("Private key decryption unsuccessful.")
 
     def create_xades_signature(self) -> None:
         """signs the document and creates xades"""
 
         if self.doc_file_path is None:
-            print("""No document provided. Provide the path to the document
-            you want to sign to complete the procedure.""", file=sys.stderr)
-            return
+            raise Exception("No document provided.")
 
         doc = self._read_doc()
-        doc_hash = hashlib.sha256(doc.encode('utf-8')).digest()
+        doc_hash = hashlib.sha256(doc).digest()
         signature = self._sign_document(doc_hash, self.private_key)
         self._create_and_write_xades(signature)
 
@@ -59,9 +54,9 @@ class Signer(SignatureProcessor):
                 return private_key_enc
 
         except FileNotFoundError:
-            print("No such file or directory", file=sys.stderr)
+            raise Exception("No such file or directory")
         except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}", file=sys.stderr)
+            raise Exception(f"Unexpected {err=}, {type(err)=}")
 
     def _decrypt_private_key(self, private_key_enc) -> None:
         key = hashlib.sha256(self.pin_code.encode('utf-8')).digest()
@@ -78,20 +73,18 @@ class Signer(SignatureProcessor):
             else:
                 return False
         except (Exception,):
-            print("Wrong pin. Private key not decrypted.", file=sys.stderr)
             return False
 
-    def _read_doc(self) -> str:
-        # TODO nie dziala dla pdf, cpp chyba dziala
+    def _read_doc(self) -> bytes:
         try:
-            with open(self.doc_file_path, "r") as f:
+            with open(self.doc_file_path, "rb") as f:
                 content = f.read()
                 print("Document read successfully.")
                 return content
         except FileNotFoundError:
-            print("No such file or directory", file=sys.stderr)
+            raise Exception("No such file or directory")
         except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}", file=sys.stderr)
+            raise Exception(f"Unexpected {err=}, {type(err)=}")
 
     @staticmethod
     def _sign_document(document: bytes, private_key: bytes) -> bytes:
@@ -108,6 +101,7 @@ class Signer(SignatureProcessor):
             ),
             hashes.SHA256()
         )
+        print("Document signed successfully.")
         return signature
 
     def _create_and_write_xades(self, signature: bytes) -> None:
