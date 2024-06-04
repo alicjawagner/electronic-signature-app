@@ -2,21 +2,16 @@ import tkinter as tk
 from tkinter import ttk
 from ttkbootstrap import Style
 
-from signature_app.gui.signature import Signature
-from signature_app.gui.verification import Verification
-from signature_app.gui.encryption import Encryption
-from signature_app.gui.decryption import Decryption
+from signature_app.gui.utils import Functionality, execute_operate_on_file_function
 
 
 def start_window():
+    fields_hide()
     info_label.pack(pady=10)
     signature_button.pack(pady=10)
     verification_button.pack(pady=10)
     encryption_button.pack(pady=10)
     decryption_button.pack(pady=10)
-    ok_button.pack_forget()
-    result_label.pack_forget()
-    ok_button.pack_forget()
     root.deiconify()
 
 
@@ -28,37 +23,34 @@ def fields_hide():
     verification_button.pack_forget()
     encryption_button.pack_forget()
     decryption_button.pack_forget()
-
-
-def print_result(result):
-    result_label.config(text=result)
-    result_label.pack(pady=10)
-    ok_button.pack(pady=10)
-    root.deiconify()
+    for field in fields.values():
+        field.pack_forget()
+    submit_button.pack_forget()
+    error_label.pack_forget()
 
 
 def signature_run():
     fields_hide()
-    window = Signature(root)
-    window.sign()
+    execute_operate_on_file_function(Functionality.SIGN, root, fields_hide, start_window, info_label, ok_button,
+                                     error_label, result_label, fields, submit_button)
 
 
 def verification_run():
     fields_hide()
-    window = Verification(root)
-    print_result(window.verifi())
+    execute_operate_on_file_function(Functionality.VERI, root, fields_hide, start_window, info_label, ok_button,
+                                     error_label, result_label)
 
 
 def encryption_run():
     fields_hide()
-    window = Encryption(root)
-    print_result(window.encrypt())
+    execute_operate_on_file_function(Functionality.ENCR, root, fields_hide, start_window, info_label, ok_button,
+                                     error_label, result_label)
 
 
 def decryption_run():
     fields_hide()
-    window = Decryption(root)
-    window.decrypt()
+    execute_operate_on_file_function(Functionality.DECR, root, fields_hide, start_window, info_label, ok_button,
+                                     error_label, result_label, fields, submit_button)
 
 
 # Window
@@ -81,16 +73,16 @@ info_label = ttk.Label(
     padding=10
 )
 
-# Button
+# Buttons
 signature_button = ttk.Button(
     root,
-    text="Make signature",
+    text="Sign documet",
     command=signature_run
 )
 
 verification_button = ttk.Button(
     root,
-    text="Verificate signature",
+    text="Verify signature",
     command=verification_run
 )
 
@@ -106,14 +98,37 @@ decryption_button = ttk.Button(
     command=decryption_run
 )
 
+# Entry pin
+fields = {}
+
+fields['pin_label'] = ttk.Label(text='Pin:')
+fields['pin'] = ttk.Entry(show="*")
+
+# Pin submit button
+submit_button = ttk.Button(
+    root,
+    text="Save",
+    command=start_window
+)
+
 # Result label
 result_label = ttk.Label(
+    root,
+    text="Result",
+    anchor="center",
+    wraplength=500,
+    padding=10,
+    style='info'
+)
+
+# Error label
+error_label = ttk.Label(
     root,
     text="Error",
     anchor="center",
     wraplength=500,
     padding=10,
-    style='info'
+    style='danger'
 )
 
 # OK button
