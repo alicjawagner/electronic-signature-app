@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from enum import Enum
 
 from signature_app.encryption import Encryptor, Decryptor
@@ -13,14 +13,56 @@ class Functionality(Enum):
     DECR = 4
 
 
-def print_what_asks(text, button_func):
+def hide_all_fields():
     hide_all_ptr()
+    hide_extra_fields()
 
-    info_label_ptr.config(text=text)
-    info_label_ptr.pack(pady=10)
 
-    ok_button_ptr.configure(command=button_func)
-    ok_button_ptr.pack(pady=10)
+def print_what_asks(text, button_func, hide=True, create_new=False):
+    if hide:
+        hide_all_fields()
+
+    if not create_new:
+        info_label_ptr.config(text=text)
+        info_label_ptr.pack(pady=10)
+
+        ok_button_ptr.configure(command=button_func)
+        ok_button_ptr.pack(pady=10)
+    else:
+        label = ttk.Label(
+            root_ptr,
+            text=text,
+            anchor="center",
+            wraplength=500,
+            padding=10
+        )
+        extra_fields.append(label)
+        extra_fields[-1].pack(pady=10)
+        button = ttk.Button(
+            root_ptr,
+            text="OK",
+            command=button_func
+        )
+        extra_fields.append(button)
+        extra_fields[-1].pack(pady=10)
+
+
+def show_in_label(text):
+    label = ttk.Label(
+        root_ptr,
+        text=text,
+        anchor="center",
+        wraplength=500,
+        padding=4,
+        font=("Helvetica", 10)
+    )
+    extra_fields.append(label)
+    extra_fields[-1].pack(pady=4)
+
+
+def hide_extra_fields():
+    for field in extra_fields:
+        field.pack_forget()
 
 
 def get_doc_file_path():
@@ -35,11 +77,42 @@ def get_doc_file_path():
         case Functionality.DECR:
             function = decrypt_and_save_file
         case _:
-            hide_all_ptr()
+            hide_all_fields()
             error_label_ptr.config(text="Error in application executing. Incorrect functionality type.")
             error_label_ptr.pack(pady=10)
     print_what_asks("Please choose document file.",
                     function)
+
+
+def verification_save_doc_file():
+    path = get_file_path()
+    executing_class.doc_file_path = path
+    show_in_label("Chosen file: " + path)
+
+
+def verification_save_signature_file():
+    path = get_file_path()
+    executing_class.signature_file_path = path
+    show_in_label("Chosen file: " + path)
+
+
+def get_doc_files_paths():
+    print_what_asks("Please choose document file.",
+                    verification_save_doc_file)
+    print_what_asks("Please choose signature file.", verification_save_signature_file, hide=False, create_new=True)
+
+    submit = ttk.Button(
+        root_ptr,
+        text="Submit",
+        command=verify_signature
+    )
+    extra_fields.append(submit)
+    extra_fields[-1].pack(pady=10)
+
+
+def get_file_path():
+    path = filedialog.askopenfilename()
+    return None if path == '' else path
 
 
 def get_public_key():
@@ -47,50 +120,48 @@ def get_public_key():
 
 
 def get_signature_file_path():
-    executing_class.doc_file_path = filedialog.askopenfilename()
+    executing_class.doc_file_path = get_file_path()
     print_what_asks("Please choose signature file.", verify_signature)
-
-
-def submit_pin():
-    if fields_ptr['pin'].get() != '':
-        executing_class.pin_code = fields_ptr['pin'].get()
-    print_what_asks("Please choose private key file.", obtain_key)
 
 
 def obtain_key():
     if functionality is Functionality.SIGN or functionality is Functionality.DECR:
-        executing_class.private_key_file_path = filedialog.askopenfilename()
+        if fields_ptr['pin'].get() != '':
+            executing_class.pin_code = fields_ptr['pin'].get()
+        executing_class.private_key_file_path = get_file_path()
         try_function_execute(executing_class.obtain_private_key, get_doc_file_path)
     elif functionality is Functionality.VERI or functionality is Functionality.ENCR:
-        executing_class.public_key_file_path = filedialog.askopenfilename()
-        try_function_execute(executing_class.obtain_public_key, get_doc_file_path)
+        executing_class.public_key_file_path = get_file_path()
+        if functionality is Functionality.ENCR:
+            try_function_execute(executing_class.obtain_public_key, get_doc_file_path)
+        elif functionality is Functionality.VERI:
+            try_function_execute(executing_class.obtain_public_key, get_doc_files_paths)
 
 
 def get_pincode():
     for field in fields_ptr.values():
         field.pack(anchor=tk.W, padx=10, pady=5, fill=tk.X)
-    submit_button_ptr.configure(command=submit_pin)
-    submit_button_ptr.pack(pady=10)
+
+    print_what_asks("Please choose private key file.", obtain_key, hide=False)
 
 
 def create_xades_signature():
-    executing_class.doc_file_path = filedialog.askopenfilename()
+    executing_class.doc_file_path = get_file_path()
     try_function_execute(executing_class.create_xades_signature, main_window_func_ptr, text="Signature successfully")
 
 
 def decrypt_and_save_file():
-    executing_class.encrypted_doc_file_path = filedialog.askopenfilename()
+    executing_class.encrypted_doc_file_path = get_file_path()
     try_function_execute(executing_class.decrypt_and_save_file, main_window_func_ptr, text="Decryption successfully")
 
 
 def verify_signature():
-    executing_class.signature_file_path = filedialog.askopenfilename()
     try_function_execute(executing_class.verify_signature, main_window_func_ptr, text="Is signature valid: ",
                          print_result=True)
 
 
 def encrypt_and_save_file():
-    executing_class.doc_file_path = filedialog.askopenfilename()
+    executing_class.doc_file_path = get_file_path()
     try_function_execute(executing_class.encrypt_and_save_file, main_window_func_ptr, text="Encryption successfully")
 
 
@@ -106,7 +177,7 @@ def try_function_execute(function_ptr, next_function, text=None, print_result=Fa
             result = function_ptr()
             print_what_asks(text + result, next_function)
         else:
-            next_function()
+            function_ptr()
             if text is None:
                 next_function()
             else:
@@ -120,7 +191,7 @@ def mach_functionality_operation():
     global executing_class
     match functionality:
         case Functionality.SIGN:
-            if submit_button_ptr is None or fields_ptr is None:
+            if fields_ptr is None:
                 print_error("Error in application executing. No attributes.")
             else:
                 executing_class = Signer()
@@ -132,29 +203,30 @@ def mach_functionality_operation():
             executing_class = Encryptor()
             get_public_key()
         case Functionality.DECR:
-            if submit_button_ptr is None or fields_ptr is None:
+            if fields_ptr is None:
                 print_error("Error in application executing. No attributes.")
             else:
                 executing_class = Decryptor()
                 get_pincode()
         case _:
-            hide_all_ptr()
+            hide_all_fields()
             error_label_ptr.config(text="Error in application executing. Incorrect functionality type.")
             error_label_ptr.pack(pady=10)
 
 
-def execute_operate_on_file_function(functionality_exec, root, hide_all, main_window_func, info_label, choose_button,
-                                     error_label, result_label, fields=None, submit_button=None):
-    global root_ptr, functionality, hide_all_ptr, main_window_func_ptr, error_label_ptr, result_label_ptr, ok_button_ptr, info_label_ptr, fields_ptr, submit_button_ptr
+def execute_operate_on_file_function(functionality_exec, root, hide_all, main_window_func, info_label, ok_button,
+                                     error_label, result_label, fields=None):
+    global root_ptr, functionality, hide_all_ptr, main_window_func_ptr, error_label_ptr, result_label_ptr, ok_button_ptr, info_label_ptr, fields_ptr, extra_fields
     functionality = functionality_exec
     root_ptr = root
     hide_all_ptr = hide_all
     main_window_func_ptr = main_window_func
     error_label_ptr = error_label
     result_label_ptr = result_label
-    ok_button_ptr = choose_button
+    ok_button_ptr = ok_button
     info_label_ptr = info_label
     fields_ptr = fields
-    submit_button_ptr = submit_button
+
+    extra_fields = []
 
     mach_functionality_operation()

@@ -25,14 +25,13 @@ def fields_hide():
     decryption_button.pack_forget()
     for field in fields.values():
         field.pack_forget()
-    submit_button.pack_forget()
     error_label.pack_forget()
 
 
 def signature_run():
     fields_hide()
     execute_operate_on_file_function(Functionality.SIGN, root, fields_hide, start_window, info_label, ok_button,
-                                     error_label, result_label, fields, submit_button)
+                                     error_label, result_label, fields=fields)
 
 
 def verification_run():
@@ -50,7 +49,7 @@ def encryption_run():
 def decryption_run():
     fields_hide()
     execute_operate_on_file_function(Functionality.DECR, root, fields_hide, start_window, info_label, ok_button,
-                                     error_label, result_label, fields, submit_button)
+                                     error_label, result_label, fields=fields)
 
 
 # Window
@@ -104,13 +103,6 @@ fields = {}
 fields['pin_label'] = ttk.Label(text='Pin:')
 fields['pin'] = ttk.Entry(show="*")
 
-# Pin submit button
-submit_button = ttk.Button(
-    root,
-    text="Save",
-    command=start_window
-)
-
 # Result label
 result_label = ttk.Label(
     root,
@@ -130,6 +122,7 @@ error_label = ttk.Label(
     padding=10,
     style='danger'
 )
+
 
 # OK button
 ok_button = ttk.Button(
