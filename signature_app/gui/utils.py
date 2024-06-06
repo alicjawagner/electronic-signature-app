@@ -16,6 +16,19 @@ class Functionality(Enum):
 def hide_all_fields():
     hide_all_ptr()
     hide_extra_fields()
+    set_visibility_menu_button(False)
+
+
+def set_visibility_menu_button(show=True):
+    if show:
+        menu_button.pack(pady=50)
+    else:
+        menu_button.pack_forget()
+
+
+def return_to_menu():
+    hide_all_fields()
+    main_window_func_ptr()
 
 
 def print_what_asks(text, button_func, hide=True, create_new=False):
@@ -82,18 +95,21 @@ def get_doc_file_path():
             error_label_ptr.pack(pady=10)
     print_what_asks("Please choose document file.",
                     function)
+    set_visibility_menu_button()
 
 
 def verification_save_doc_file():
     path = get_file_path()
     executing_class.doc_file_path = path
     show_in_label("Chosen file: " + path)
+    set_visibility_menu_button()
 
 
 def verification_save_signature_file():
     path = get_file_path()
     executing_class.signature_file_path = path
     show_in_label("Chosen file: " + path)
+    set_visibility_menu_button()
 
 
 def get_doc_files_paths():
@@ -108,6 +124,7 @@ def get_doc_files_paths():
     )
     extra_fields.append(submit)
     extra_fields[-1].pack(pady=10)
+    set_visibility_menu_button()
 
 
 def get_file_path():
@@ -117,11 +134,13 @@ def get_file_path():
 
 def get_public_key():
     print_what_asks("Please choose public key file.", obtain_key)
+    set_visibility_menu_button()
 
 
 def get_signature_file_path():
     executing_class.doc_file_path = get_file_path()
     print_what_asks("Please choose signature file.", verify_signature)
+    set_visibility_menu_button()
 
 
 def obtain_key():
@@ -143,16 +162,17 @@ def get_pincode():
         field.pack(anchor=tk.W, padx=10, pady=5, fill=tk.X)
 
     print_what_asks("Please choose private key file.", obtain_key, hide=False)
+    set_visibility_menu_button()
 
 
 def create_xades_signature():
     executing_class.doc_file_path = get_file_path()
-    try_function_execute(executing_class.create_xades_signature, main_window_func_ptr, text="Signature successfully")
+    try_function_execute(executing_class.create_xades_signature, main_window_func_ptr, text="Signature successful")
 
 
 def decrypt_and_save_file():
     executing_class.encrypted_doc_file_path = get_file_path()
-    try_function_execute(executing_class.decrypt_and_save_file, main_window_func_ptr, text="Decryption successfully")
+    try_function_execute(executing_class.decrypt_and_save_file, main_window_func_ptr, text="Decryption successful")
 
 
 def verify_signature():
@@ -162,7 +182,7 @@ def verify_signature():
 
 def encrypt_and_save_file():
     executing_class.doc_file_path = get_file_path()
-    try_function_execute(executing_class.encrypt_and_save_file, main_window_func_ptr, text="Encryption successfully")
+    try_function_execute(executing_class.encrypt_and_save_file, main_window_func_ptr, text="Encryption successful")
 
 
 def print_error(err):
@@ -175,7 +195,7 @@ def try_function_execute(function_ptr, next_function, text=None, print_result=Fa
     try:
         if print_result:
             result = function_ptr()
-            print_what_asks(text + result, next_function)
+            print_what_asks(text + str(result), next_function)
         else:
             function_ptr()
             if text is None:
@@ -226,6 +246,14 @@ def execute_operate_on_file_function(functionality_exec, root, hide_all, main_wi
     ok_button_ptr = ok_button
     info_label_ptr = info_label
     fields_ptr = fields
+
+    global menu_button
+    menu_button = ttk.Button(
+        root_ptr,
+        text="Go back to menu",
+        command=return_to_menu,
+        style='secondary.Outline.TButton'
+    )
 
     extra_fields = []
 
