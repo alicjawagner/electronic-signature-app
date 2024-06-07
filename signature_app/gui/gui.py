@@ -7,6 +7,7 @@ from signature_app.gui.utils import Functionality, execute_operate_on_file_funct
 
 def start_window():
     fields_hide()
+    info_label.config(text=info_label_text)
     info_label.pack(pady=10)
     signature_button.pack(pady=10)
     verification_button.pack(pady=10)
@@ -64,9 +65,10 @@ style.configure("TButton", font=("Helvetica", 16))
 small_info_font = font = ("Helvetica", 12)
 
 # Info label
+info_label_text = "Choose functionality"
 info_label = ttk.Label(
     root,
-    text="Choose functionality",
+    text=info_label_text,
     anchor="center",
     wraplength=500,
     padding=10
@@ -75,7 +77,7 @@ info_label = ttk.Label(
 # Buttons
 signature_button = ttk.Button(
     root,
-    text="Sign documet",
+    text="Sign document",
     command=signature_run
 )
 
