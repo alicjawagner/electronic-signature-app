@@ -176,8 +176,7 @@ def decrypt_and_save_file():
 
 
 def verify_signature():
-    try_function_execute(executing_class.verify_signature, main_window_func_ptr, text="Is signature valid: ",
-                         print_result=True)
+    try_function_execute(executing_class.verify_signature, main_window_func_ptr, text="Is signature valid: ", bool_true="The signature is valid", bool_false="The signature is invalid")
 
 
 def encrypt_and_save_file():
