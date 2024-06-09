@@ -167,7 +167,7 @@ def get_pincode():
 
 def create_xades_signature():
     executing_class.doc_file_path = get_file_path()
-    try_function_execute(executing_class.create_xades_signature, main_window_func_ptr, bool_true="The signature is valid", bool_false="The signature is invalid")
+    try_function_execute(executing_class.create_xades_signature, main_window_func_ptr, text="Created signature file")
 
 
 def decrypt_and_save_file():
@@ -176,7 +176,7 @@ def decrypt_and_save_file():
 
 
 def verify_signature():
-    try_function_execute(executing_class.verify_signature, main_window_func_ptr, text="Is signature valid: ", bool_true="The signature is valid", bool_false="The signature is invalid")
+    try_function_execute(executing_class.verify_signature, main_window_func_ptr, bool_true="The signature is valid", bool_false="The signature is invalid")
 
 
 def encrypt_and_save_file():
